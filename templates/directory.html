@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Directory Contents</title>
+</head>
+<body>
+    <h1>Contents of {{ subpath }}</h1>
+    <ul>
+        {% for item in items %}
+            <li>
+                <a href="{{ url_for('view_directory', subpath=subpath + '/' + item) }}">{{ item }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Back to Home</a>
+</body>
+</html>
+
