@@ -1,0 +1,173 @@
+{% extends "base.html"%}
+{% block title %}
+    {{file}}
+{% endblock title %}
+{% block head %}
+{% endblock head %}
+{% block body %}
+<h1>Viewing File: {{ file }}</h1>
+
+{% if file_type in ['.png', '.jpg', '.jpeg', '.gif'] %}
+    <img id="media" src="{{ file }}" alt="Image" style="max-width: 100%; height: auto;">
+{% elif file_type in ['.mp4', '.webm'] %}
+<div class="d-flex d-flex justify-content-center">
+    <video id="media" class="" controls preload="auto" width="85%" height="auto">
+        <source src="{{ file }}" type="video/{{ file_type[1:] }}">
+        Your browser does not support the video tag.
+    </video>
+    </div>
+{% else %}
+    <p>Unsupported file type.</p>
+{% endif %}
+
+<a href="{{ url_for('index') }}">Back to Home</a>
+<script>
+const VideoKeyboardShortcuts = {
+    elements: [],
+    initated: false,
+    pip_state: false,
+    pip_interval: null,
+    keys: new Set(),
+    init() {
+        if (!VideoKeyboardShortcuts.initated) {
+            document.addEventListener('keydown', VideoKeyboardShortcuts.keydown);
+            VideoKeyboardShortcuts.initated = true;
+        }
+    },
+    getElements() {
+        VideoKeyboardShortcuts.elements = Array.from(document.querySelectorAll('video')).sort((a, b) => a.paused - b.paused === 0 ? b.clientWidth - a.clientWidth : a.paused - b.paused);
+    },
+    pip() {
+        if (VideoKeyboardShortcuts.pip_state) {
+            VideoKeyboardShortcuts.getElements();
+            let element = VideoKeyboardShortcuts.elements[0];
+            if (element !== document.pictureInPictureElement) {
+                element.requestPictureInPicture();
+                if (document.domain !== 'meet.google.com') {
+                    element.addEventListener('leavepictureinpicture', _ => VideoKeyboardShortcuts.pip_state = false);
+                }
+            }
+        }
+    },
+    toggleFullscreen(element) {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) { // Safari
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) { // IE/Edge
+            element.msRequestFullscreen();
+        }
+    },
+    keydown(event) {
+        if (VideoKeyboardShortcuts.keys.has(event)) {
+            return;
+        }
+        VideoKeyboardShortcuts.keys.add(event);
+        if (["INPUT", "TEXTAREA", "SELECT", "BUTTON"].indexOf(event.target.tagName) < 0) {
+            VideoKeyboardShortcuts.getElements();
+            if (['www.youtube.com', 'youtube.googleapis.com'].indexOf(document.domain) < 0) {
+                switch (event.key) {
+                    case 'j':
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            element.currentTime -= 10;
+                        });
+                        break;
+                    case 'k':
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            if (element.paused) {
+                                element.play();
+                            } else {
+                                element.pause();
+                            }
+                        });
+                        break;
+                    case 'l':
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            element.currentTime += 10;
+                        });
+                        break;
+                    case 'm':
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            if (element.muted) {
+                                element.muted = false;
+                            } else {
+                                element.muted = true;
+                            }
+                        });
+                        break;
+                    case 'ArrowLeft':
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            element.currentTime -= 5;
+                        });
+                        break;
+                    case 'ArrowRight':
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            element.currentTime += 5;
+                        });
+                        break;
+                    case 'f': // Fullscreen toggle
+                        if (VideoKeyboardShortcuts.elements.length > 0) {
+                            const element = VideoKeyboardShortcuts.elements[0];
+                            VideoKeyboardShortcuts.toggleFullscreen(element);
+                        }
+                        break;
+                    default:
+                        var number = Number.parseInt(event.key);
+                        if (!isNaN(number)) {
+                            let percent = number / 10;
+                            VideoKeyboardShortcuts.elements.map(element => {
+                                element.currentTime = percent * element.duration;
+                            });
+                        }
+                        break;
+                }
+            }
+            switch (event.key) {
+                case 'p':
+                    VideoKeyboardShortcuts.pip_state = !VideoKeyboardShortcuts.pip_state;
+                    if (VideoKeyboardShortcuts.pip_state) {
+                        VideoKeyboardShortcuts.pip();
+                        VideoKeyboardShortcuts.pip_interval = window.setInterval(VideoKeyboardShortcuts.pip, 100);
+                    } else {
+                        window.clearInterval(VideoKeyboardShortcuts.pip_interval);
+                        if (document.pictureInPictureElement) {
+                            document.exitPictureInPicture();
+                        }
+                    }
+                    break;
+                case '.':
+                    if (event.shiftKey && (event.metaKey || event.ctrlKey)) {
+                        const velocity = prompt('Video Playback Rate:') || 1;
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            element.playbackRate = Math.min(16, Math.max(0.0625, velocity));
+                        });
+                    }
+                    break;
+                case 't':
+                    VideoKeyboardShortcuts.elements.map(element => {
+                        const time = prompt('Time HH:MM:SS').split(':').map((v, i, a) => v * 60 ** (a.length - i - 1)).reduce((a, b) => a + b);
+                        element.currentTime = time;
+                    });
+                    break;
+                case 'ArrowDown':
+                    if (event.metaKey || event.ctrlKey) {
+                        VideoKeyboardShortcuts.elements.map(element => {
+                            const link = document.createElement("a");
+                            link.href = element.currentSrc;
+                            link.download = "";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            delete link;
+                        });
+                    }
+                    break;
+            }
+        }
+    }
+};
+VideoKeyboardShortcuts.init();
+</script>
+{% endblock %}

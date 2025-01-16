@@ -1,0 +1,14 @@
+{% extends "base.html"%}
+{% block body %}
+<h1>Contents of {{ subpath }}</h1>
+<ul>
+    {% for item, link in items %}
+        <li>
+            <a href="{{ link }}">{{ item }}</a>
+        </li>
+    {% endfor %}
+</ul>
+<a href="{{ url_for('index') }}">Back to Home</a>
+{% endblock %}
+
+
