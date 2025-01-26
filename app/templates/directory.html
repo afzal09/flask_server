@@ -1,6 +1,7 @@
 {% extends "base.html"%}
 {% block body %}
 <h1>Contents of {{ subpath }}</h1>
+{{ request.base_url }}
 <ul>
     {% for item, link in items %}
         <li>

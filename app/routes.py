@@ -1,11 +1,13 @@
 from app import app,env
-from flask import render_template, send_from_directory, url_for
-import os,sys
+from flask import render_template, send_from_directory, url_for, request
+import os
+import configparser
 
-
-
+# configparser
+configparser = configparser.ConfigParser()
+configparser.read('./app/app.config')
 # Base directory for file exploration
-BASE_DIR = os.path.abspath('../')
+BASE_DIR = configparser['BASE_DIR']['base_dir']
 
 @app.route('/')
 def index():
